@@ -82,15 +82,15 @@ displayValues = putStrLn . valuesToString
 -- valuesToString :: Values -> String
 valuesToString v = answer where
   eles = elems v
-  l0 = groupsOf 3 $ groupsOf 3 $ groupsOf 3 $ eles
-  l1 = (map . map . map . map) (center width) l0
-  l2 = (map . map . map) concat l1
-  l3 = (map . map) (sjoin "|") l2
-  l4 = map (sjoin "\n") l3
-  answer = sjoin hruler l4
+  s0 = groupsOf 3 $ groupsOf 3 $ groupsOf 3 $ eles
+  s1 = (map . map . map . map) (center width) s0
+  s2 = (map . map . map) concat               s1
+  s3 = (map . map) (sjoin "|")                s2
+  s4 = map (sjoin "\n")                       s3
+  answer = sjoin hruler                       s4
   r = replicate
-  width = 1 + (maximum $ map length eles)
-  hruler = "\n" ++ (sjoin "+" $ r 3 $ sjoin ""  $ r 3 $ r width '-') ++ "\n"
+  width = 2 + (maximum $ map length eles)
+  hruler = "\n" ++ (sjoin "+" $ r 3 $ concat $ r 3 $ r width '-') ++ "\n"
 
 -- splits a list in groups of n
 -- it's faster to reverse the result
