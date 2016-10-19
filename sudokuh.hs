@@ -90,7 +90,7 @@ valuesToString v = answer where
   answer = sjoin hruler l4
   r = replicate
   width = 1 + (maximum $ map length eles)
-  hruler = "\n" ++ (sjoin "-+" $ r 3 $ sjoin " "  $ r 3 $ r (width-1) '-') ++ "\n"
+  hruler = "\n" ++ (sjoin "+" $ r 3 $ sjoin ""  $ r 3 $ r width '-') ++ "\n"
 
 -- splits a list in groups of n
 -- it's faster to reverse the result
