@@ -92,13 +92,6 @@ valuesToString v = answer where
   width = 1 + (maximum $ map length eles)
   hruler = "\n" ++ (sjoin "-+" $ r 3 $ sjoin " "  $ r 3 $ r (width-1) '-') ++ "\n"
 
-valuesToString' v = answer where
-  rows        = groupsOf 9 $ elems v
-  threes      = map (groupsOf 3) rows
-  cell2str l  = (center width) l
-  answer      = show threes
-  width       = 1 + (maximum $ map length rows)
-
 -- splits a list in groups of n
 -- it's faster to reverse the result
 -- than keeping conc'ing to growing acc
