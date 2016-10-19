@@ -80,11 +80,17 @@ displayValues :: Values -> IO ()
 displayValues = putStrLn . valuesToString
 
 -- valuesToString :: Values -> String
-valuesToString v = answer where
-  elements = groupsOf 9 $ elems v
-  width = 1 + (maximum $ map length elements)
-  line2string l = concat $ map (center width) l
-  answer = concat $ map ((++"\n") . line2string) elements
+valuesToString v = undefined where
+  eles    = elems v
+  padded  = map (center width) eles
+  triples = groupsOf 3 padded
+  width = 1 + (maximum $ map length eles)
+valuesToString' v = answer where
+  rows        = groupsOf 9 $ elems v
+  threes      = map (groupsOf 3) rows
+  cell2str l  = (center width) l
+  answer      = show threes
+  width       = 1 + (maximum $ map length rows)
 
 -- splits a list in groups of n
 -- it's faster to reverse the result
@@ -103,11 +109,14 @@ center n s = if length s >= n then s else prefix ++ s ++ suffix
     free = n - length s
     before = free `div` 2
     after  = free - before
-    prefix = take before $ repeat ' '
-    suffix = take after  $ repeat ' '
+    prefix = replicate before ' '
+    suffix = replicate after  ' '
 
-join :: Char -> String -> String
-join = intersperse
+--
+-- mimicking Python string methods
+--
+sjoin :: String -> [String] -> String
+sjoin s = concat . intersperse s
 
 testGrid = "4.....8.5.3..........7......2.....6.....8.4......1.......6.3.7.5..2.....1.4......"
 
