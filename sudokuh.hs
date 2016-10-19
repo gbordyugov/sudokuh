@@ -9,6 +9,7 @@
 -- still work in progress, very initial
 --
 
+import Data.List
 import Data.Array
 import Data.Char
 import Data.Set (Set, fromList, toList)
@@ -42,11 +43,10 @@ cross a b = [(x, y) | x <- a, y <- b]
 squares = cross rows cols
 
 unitlist :: [Unit]
-unitlist = [cross rows [c] | c <- cols] ++
-           [cross [r] cols | r <- rows] ++
-           [cross rs cs | rs <- [[RA .. RC], [RD .. RF], [RG .. RI]],
-                          cs <- [[C1 .. C3], [C4 .. C6], [C7 .. C9]]]
-
+unitlist = [cross rows [c]  | c  <- cols] ++
+           [cross [r]  cols | r  <- rows] ++
+           [cross  rs   cs  | rs <- groupsOf 3 [RA ..],
+                              cs <- groupsOf 3 [C1 ..]]
 
 fillArray :: (Index -> a) -> (Array Index a)
 fillArray f = listArray bnds [ f s | s <- range bnds]
@@ -73,14 +73,41 @@ assign v i d = undefined
 eliminate :: Values -> Index -> Digit -> (Maybe Values)
 eliminate v i d = undefined
 
-display :: Values -> IO ()
-display v = 
-  let 
-    width = 1 + maximum (map length $ elems v)
-    -- width = 1 + maximum [1, 2, 3]
-    line = ""
-  in
-    undefined
+--
+-- output functions
+--
+displayValues :: Values -> IO ()
+displayValues = putStrLn . valuesToString
+
+-- valuesToString :: Values -> String
+valuesToString v = answer where
+  elements = groupsOf 9 $ elems v
+  width = 1 + (maximum $ map length elements)
+  line2string l = concat $ map (center width) l
+  answer = concat $ map ((++"\n") . line2string) elements
+
+-- splits a list in groups of n
+-- it's faster to reverse the result
+-- than keeping conc'ing to growing acc
+groupsOf :: Int -> [a] -> [[a]]
+groupsOf n xs = reverse $ grp n xs [] where
+  grp n [] acc = acc
+  grp n xs acc = grp n (drop n xs) ([take n xs] ++ acc)
+
+--
+-- mimicking Python string methods
+--
+center :: Int -> String -> String
+center n s = if length s >= n then s else prefix ++ s ++ suffix
+  where
+    free = n - length s
+    before = free `div` 2
+    after  = free - before
+    prefix = take before $ repeat ' '
+    suffix = take after  $ repeat ' '
+
+join :: Char -> String -> String
+join = intersperse
 
 testGrid = "4.....8.5.3..........7......2.....6.....8.4......1.......6.3.7.5..2.....1.4......"
 
