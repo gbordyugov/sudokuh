@@ -80,11 +80,18 @@ displayValues :: Values -> IO ()
 displayValues = putStrLn . valuesToString
 
 -- valuesToString :: Values -> String
-valuesToString v = undefined where
-  eles    = elems v
-  padded  = map (center width) eles
-  triples = groupsOf 3 padded
+valuesToString v = answer where
+  eles = elems v
+  l0 = groupsOf 3 $ groupsOf 3 $ groupsOf 3 $ eles
+  l1 = (map . map . map . map) (center width) l0
+  l2 = (map . map . map) concat l1
+  l3 = (map . map) (sjoin "|") l2
+  l4 = map (sjoin "\n") l3
+  answer = sjoin hruler l4
+  r = replicate
   width = 1 + (maximum $ map length eles)
+  hruler = "\n" ++ (sjoin "-+" $ r 3 $ sjoin " "  $ r 3 $ r (width-1) '-') ++ "\n"
+
 valuesToString' v = answer where
   rows        = groupsOf 9 $ elems v
   threes      = map (groupsOf 3) rows
@@ -119,4 +126,3 @@ sjoin :: String -> [String] -> String
 sjoin s = concat . intersperse s
 
 testGrid = "4.....8.5.3..........7......2.....6.....8.4......1.......6.3.7.5..2.....1.4......"
-
