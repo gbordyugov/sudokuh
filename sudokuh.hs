@@ -85,12 +85,13 @@ valuesToString v = answer where
   s0 = groupsOf 3 $ groupsOf 3 $ groupsOf 3 $ eles
   s1 = (map . map . map . map) (center width) s0
   s2 = (map . map . map) concat               s1
-  s3 = (map . map) (sjoin "|")                s2
-  s4 = map (sjoin "\n")                       s3
-  answer = sjoin hruler                       s4
+  s3 = (map . map) (intercalate "|")          s2
+  s4 = map (intercalate "\n")                 s3
+  answer = intercalate hruler                 s4
   r = replicate
   width = 2 + (maximum $ map length eles)
-  hruler = "\n" ++ (sjoin "+" $ r 3 $ concat $ r 3 $ r width '-') ++ "\n"
+  hruler = "\n" ++ (intercalate "+" $ r 3 $ concat $ r 3 $ r width '-')
+                ++ "\n"
 
 -- splits a list in groups of n
 -- it's faster to reverse the result
@@ -111,11 +112,5 @@ center n s = if length s >= n then s else prefix ++ s ++ suffix
     after  = free - before
     prefix = replicate before ' '
     suffix = replicate after  ' '
-
---
--- mimicking Python string methods
---
-sjoin :: String -> [String] -> String
-sjoin s = concat . intersperse s
 
 testGrid = "4.....8.5.3..........7......2.....6.....8.4......1.......6.3.7.5..2.....1.4......"
