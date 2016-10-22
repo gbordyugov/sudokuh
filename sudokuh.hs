@@ -9,6 +9,8 @@
 -- still work in progress, very initial
 --
 
+import Control.Monad
+
 import Data.List
 import Data.Array
 import Data.Char
@@ -16,16 +18,10 @@ import Data.Set (Set, fromList, toList)
 
 
 data Column = C1 | C2 | C3 | C4 | C5 | C6 | C7 | C8 | C9
-              deriving (Eq, Ord, Enum, Ix)
-
-instance Show Column where show = show . (+1) . fromEnum
-
+              deriving (Show, Eq, Ord, Enum, Ix)
 
 data Row = RA | RB | RC | RD | RE | RF | RG | RH | RI
-           deriving (Eq, Ord, Enum, Ix)
-
-instance Show Row where show x = [chr (ord 'A' + fromEnum x)]
-
+           deriving (Show, Eq, Ord, Enum, Ix)
 
 type Index = (Row, Column) -- a single cell in the matrix
 type Unit = [Index] -- a set of cells
@@ -63,21 +59,27 @@ type Values = Array Index [Digit]
 
 iniValues = fillArray $ \s -> digits
 
-gridValues :: String -> (Array Index Char)
-gridValues grid' = listArray bnds grid where
-  grid = filter (`elem` "0." ++ digits) grid'
+assign :: Values -> (Index, Digit) -> Maybe Values
+assign v (i, '.') = Just v
+assign v (i, '0') = Just v
+assign v (i, d) =
+  let l = zip (peers ! i) $ repeat d
+      v' = v // [(i, [d])]
+  in foldM (\v c -> eliminate v c) v' l
 
-assign :: Values -> Index -> Digit -> (Maybe Values)
-assign v i d = undefined
+eliminate :: Values -> (Index, Digit) -> Maybe Values
+eliminate v c@(i, d) = Just $ v // [(i, remove d (v ! i))]
 
-eliminate :: Values -> Index -> Digit -> (Maybe Values)
-eliminate v i d = undefined
+parseGrid :: String -> Maybe Values
+parseGrid s = foldM (\v c@(i, d) -> assign v c) iniValues $
+                    zip (cross rows cols) s
 
 --
 -- output functions
 --
-displayValues :: Values -> IO ()
-displayValues = putStrLn . valuesToString
+displayMValues :: Maybe Values -> IO ()
+displayMValues (Just v) = (putStrLn . valuesToString) v
+displayMValues _ = putStrLn "no solution"
 
 -- valuesToString :: Values -> String
 valuesToString v = answer where
@@ -113,4 +115,7 @@ center n s = if length s >= n then s else prefix ++ s ++ suffix
     prefix = replicate before ' '
     suffix = replicate after  ' '
 
-testGrid = "4.....8.5.3..........7......2.....6.....8.4......1.......6.3.7.5..2.....1.4......"
+testGrid1 = "12"
+testGrid2 = "4.....8.5.3..........7......2.....6.....8.4......1.......6.3.7.5..2.....1.4......"
+
+(Just x1) = parseGrid "1"
