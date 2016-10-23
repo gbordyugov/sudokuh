@@ -64,23 +64,25 @@ assign v (i, '.') = Just v
 assign v (i, '0') = Just v
 assign v (i, d) =
   let l = zip (peers ! i) $ repeat d
-      v' = v // [(i, [d])]
-  in foldM (\v c@(i, d) -> eliminate v c) v' l
+      u = v // [(i, [d])]
+  in foldM (\v c@(i, d) -> eliminate v c) u l
 
 eliminate :: Values -> (Index, Digit) -> Maybe Values
-eliminate v c@(i, d) =
+eliminate v (i, d) =
   if not $ elem d $ v ! i
   then
     Just v
   else
-    let e  = remove d (v ! i)
-        v' = v // [(i, e)]
-    in if 1 == length e
-       then
-         let l = zip (peers ! i) $ repeat $ head e
-         in foldM (\v c -> eliminate v c) v' l
-       else
-         Just v'
+    let e = remove d (v ! i)
+        l = length e
+    in if l == 0
+       then Nothing -- contradiction
+       else if l == 1
+            then let u = v // [(i, e)]
+                     l = zip (peers ! i) $ repeat $ head e
+                     w = foldM (\v c -> eliminate v c) u l
+                 in w
+            else Just $ v // [(i, e)]
 
 
 
