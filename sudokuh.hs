@@ -17,11 +17,11 @@ import Data.Char
 import Data.Set (Set, fromList, toList)
 
 
-data Column = C1 | C2 | C3 | C4 | C5 | C6 | C7 | C8 | C9
-              deriving (Show, Eq, Ord, Enum, Ix)
-
 data Row = RA | RB | RC | RD | RE | RF | RG | RH | RI
            deriving (Show, Eq, Ord, Enum, Ix)
+
+data Column = C1 | C2 | C3 | C4 | C5 | C6 | C7 | C8 | C9
+              deriving (Show, Eq, Ord, Enum, Ix)
 
 type Index = (Row, Column) -- a single cell in the matrix
 type Unit = [Index] -- a set of cells
@@ -65,10 +65,24 @@ assign v (i, '0') = Just v
 assign v (i, d) =
   let l = zip (peers ! i) $ repeat d
       v' = v // [(i, [d])]
-  in foldM (\v c -> eliminate v c) v' l
+  in foldM (\v c@(i, d) -> eliminate v c) v' l
 
 eliminate :: Values -> (Index, Digit) -> Maybe Values
-eliminate v c@(i, d) = Just $ v // [(i, remove d (v ! i))]
+eliminate v c@(i, d) =
+  if not $ elem d $ v ! i
+  then
+    Just v
+  else
+    let e  = remove d (v ! i)
+        v' = v // [(i, e)]
+    in if 1 == length e
+       then
+         let l = zip (peers ! i) $ repeat $ head e
+         in foldM (\v c -> eliminate v c) v' l
+       else
+         Just v'
+
+
 
 parseGrid :: String -> Maybe Values
 parseGrid s = foldM (\v c@(i, d) -> assign v c) iniValues $
