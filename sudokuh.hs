@@ -81,8 +81,10 @@ eliminate v (i, d) =
                else Just $ v // [(i, e)]
 
 parseGrid :: String -> Maybe Values
-parseGrid s = foldM (\v c@(i, d) -> assign v c) iniValues $
-                    zip (cross rows cols) s
+parseGrid s =
+  foldM (\v c -> assign v c) iniValues $ zip allcells s'
+  where s'       = filter (`elem` ".0123456789") s
+        allcells = cross rows cols
 
 --
 -- output functions
