@@ -67,24 +67,18 @@ assign v (i, d) =
       u = v // [(i, [d])]
   in foldM (\v c@(i, d) -> eliminate v c) u l
 
+
 eliminate :: Values -> (Index, Digit) -> Maybe Values
 eliminate v (i, d) =
   if not $ elem d $ v ! i
-  then
-    Just v
-  else
-    let e = remove d (v ! i)
-        l = length e
-    in if l == 0
-       then Nothing -- contradiction
-       else if l == 1
-            then let u = v // [(i, e)]
-                     l = zip (peers ! i) $ repeat $ head e
-                     w = foldM (\v c -> eliminate v c) u l
-                 in w
-            else Just $ v // [(i, e)]
-
-
+  then Just v
+  else let e = remove d $ v ! i
+           l = length e
+       in if l == 0
+          then Nothing -- contradiction
+          else if l == 1
+               then assign v (i, head e)
+               else Just $ v // [(i, e)]
 
 parseGrid :: String -> Maybe Values
 parseGrid s = foldM (\v c@(i, d) -> assign v c) iniValues $
