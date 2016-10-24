@@ -74,11 +74,12 @@ eliminate v (i, d) =
   then Just v
   else let e = remove d $ v ! i
            l = length e
-       in if l == 0
-          then Nothing -- contradiction
-          else if l == 1
-               then assign v (i, head e)
-               else Just $ v // [(i, e)]
+       in let elt = if l == 0
+                    then Nothing -- contradiction
+                    else if l == 1
+                         then assign v (i, head e)
+                         else Just $ v // [(i, e)]
+          in elt
 
 parseGrid :: String -> Maybe Values
 parseGrid s =
