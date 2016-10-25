@@ -1,5 +1,5 @@
 
--- 
+--
 -- An implementation of Peter Norvig's sudoku solver
 -- http://norvig.com/sudoku.html
 --
@@ -102,8 +102,19 @@ eliminate v (i, d) =
                   []  -> Nothing               -- contradiction
                   [c] -> foldM eliminate u (zip (peers ! i) (repeat c))
                   _   -> Just u                -- nothing special
-             in w >>= \x -> checkUnits x (i, d)
-             -- in w >>= \x -> return x
+             -- in w >>= \x -> checkUnits x (i, d)
+             in w >>= \x -> foldM (locate d) x (units ! i)
+
+--
+-- Manu / Daniel Fischer's version of this func
+--
+-- why is it faster?
+--
+locate :: Digit -> Values -> Unit -> Maybe Values
+locate d v u = case filter ((d `elem`) . (v!)) u of
+  []  -> Nothing
+  [s] -> assign v (s, d)
+  _   -> return v
 
 
 --
@@ -137,6 +148,18 @@ search (Just v) =
     some (Just x : xs) = Just x
     some (_:xs)        = some xs
 
+--
+--
+-- Search by Manu & Daniel Fischer
+--
+search' :: Maybe Values -> Maybe Values
+search' Nothing  = Nothing
+search' (Just g) =
+  case [(l,(s,xs)) | (s,xs) <- assocs g, let l = length xs, l /= 1] of
+            [] -> return g
+            ls -> do let (_,(s,ds)) = minimum ls
+                     -- msum [assign g (s,d) >>= search' | d <- ds]
+                     msum [search' (assign g (s,d)) | d <- ds]
 
 groupsOf :: Int -> [a] -> [[a]]
 groupsOf n xs = reverse $ grp n xs [] where
