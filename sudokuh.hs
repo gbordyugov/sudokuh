@@ -133,8 +133,8 @@ displayMValues :: Maybe Values -> IO ()
 displayMValues (Just v) = (putStrLn . (++"\n") . valuesToString) v
 displayMValues _ = putStrLn "no solution"
 
-solveAndDisply :: String -> IO ()
-solveAndDisply = displayMValues . solve
+solveAndDisplay :: String -> IO ()
+solveAndDisplay = displayMValues . solve
 
 valuesToString :: Values -> String
 valuesToString v = answer where
@@ -158,7 +158,7 @@ parseGrid s =
 doFile :: String -> IO ()
 doFile fname = do
   f <- readFile fname
-  mapM_ solveAndDisply $ lines f
+  mapM_ solveAndDisplay $ lines f
 
 main = doFile "top95.txt"
 
