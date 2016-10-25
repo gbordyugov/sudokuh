@@ -44,53 +44,68 @@ unitlist = [cross rows [c]  | c  <- cols] ++
            [cross  rs   cs  | rs <- groupsOf 3 [RA ..],
                               cs <- groupsOf 3 [C1 ..]]
 
-fillArray :: (Index -> a) -> (Array Index a)
+fillArray :: (Index -> a) -> Array Index a
 fillArray f = listArray bnds [ f s | s <- range bnds]
 
 units :: Array Index [Unit]
-units = fillArray $ \s -> [ u | u <- unitlist, elem s u]
+units = fillArray $ \s -> [ u | u <- unitlist, s `elem` u]
 
 peers :: Array Index [Index]
 peers = fillArray $ \s -> toList. fromList $ remove s $ concat $ units ! s
+
+
 
 -- map from index to set of possible digits
 
 type Values = Array Index [Digit]
 
-iniValues = fillArray $ \s -> digits
 
+iniValues = fillArray $ const digits
+
+
+--
+-- assign a value to a cell
+-- and eliminates the value from cell peers
+--
 assign :: Values -> (Index, Digit) -> Maybe Values
-assign v (i, '.') = Just v
-assign v (i, '0') = Just v
+assign v (_, '.') = Just v
+assign v (_, '0') = Just v
 assign v (i, d) =
-  let l = zip (peers ! i) $ repeat d
-      u = v // [(i, [d])]
-  in foldM (\v c@(i, d) -> eliminate v c) u l
+  let u = v // [(i, [d])]
+      l = zip (peers ! i) $ repeat d
+  in foldM eliminate u l
 
 
+--
+-- eliminates value d from cell i
+--
 eliminate :: Values -> (Index, Digit) -> Maybe Values
 eliminate v (i, d) =
-  if not $ elem d $ v ! i
-  then Just v
-  else let e = remove d $ v ! i
-           l = length e
-       in let elt = if l == 0
-                    then Nothing -- contradiction
-                    else if l == 1
-                         then assign v (i, head e)
-                         else Just $ v // [(i, e)]
-          in elt >>= \x -> checkUnits x (i, d)
+  let ds = v ! i                -- possible digits before elimination
+  in if d `notElem` ds          -- is already eliminated?
+     then Just v                -- do nothing
+     else let e = remove d ds   -- remaining digits
+          in let u = case (length e) of
+                  0 -> Nothing               -- contradiction
+                  1 -> assign v (i, head e)  -- assign it
+                  _ -> Just $ v // [(i, e)]  -- nothing special
+             in u >>= \x -> checkUnits x (i, d)
 
 
+--
+-- digit d has just been eliminated from cell i
+-- it can happen that in some unit of i, digit d can now appear
+-- just on one position
+-- if this is the case, assign d to that position
+--
 checkUnits :: Values -> (Index, Digit) -> Maybe Values
 checkUnits v (i, d) =
-  let us  = units ! i
-      jss = [[j | j <- u, d `elem` (v ! j)] | u <- us]
+  let jss = [ [j | j <- u, d `elem` (v ! j)] | u <- units ! i]
   in foldM f v jss
   where
-    f u []     = Nothing
-    f u (j:[]) = assign u (j, d)
-    f u _      = Just u
+    f u []  = Nothing         -- contradiction, no place for this value
+    f u [j] = assign u (j, d) -- d can only be here, assign it
+    f u _   = Just u          -- d appears more than once in this unit
 
 
 search :: Maybe Values -> Maybe Values
@@ -98,14 +113,14 @@ search Nothing = Nothing
 search (Just v) =
   let lens    = map length [v!i | i <- squares]
       notdone = filter (/=1) lens -- the ambigous ones
-  in if length notdone == 0
+  in if null notdone
      then Just v
      else let (n, s) = minimum [(length (v!s), s) | s <- squares
                                                   , length (v!s) > 1]
           in some [search (assign v (s, d)) | d <- v!s]
   where
     some []            = Nothing
-    some ((Just x):xs) = Just x
+    some (Just x : xs) = Just x
     some (_:xs)        = some xs
 
 
@@ -139,20 +154,20 @@ solveAndDisplay = displayMValues . solve
 valuesToString :: Values -> String
 valuesToString v = answer where
   eles = elems v
-  s0 = groupsOf 3 $ groupsOf 3 $ groupsOf 3 $ eles
+  s0 = groupsOf 3 $ groupsOf 3 $ groupsOf 3 eles
   s1 = (map . map . map . map) (center width) s0
   s2 = (map . map . map) concat               s1
   s3 = (map . map) (intercalate "|")          s2
   s4 = map (intercalate "\n")                 s3
   answer = intercalate hruler                 s4
   r = replicate
-  width = 1 + (maximum $ map length eles)
-  hruler = "\n" ++ (intercalate "+" $ r 3 $ concat $ r 3 $ r width '-')
+  width = 1 + maximum (map length eles)
+  hruler = "\n" ++ intercalate "+" (r 3 $ concat $ r 3 $ r width '-')
                 ++ "\n"
 
 parseGrid :: String -> Maybe Values
 parseGrid s =
-  foldM (\v c -> assign v c) iniValues $ zip squares s'
+  foldM assign iniValues $ zip squares s'
   where s'       = filter (`elem` ".0123456789") s
 
 doFile :: String -> IO ()
@@ -162,5 +177,5 @@ doFile fname = do
 
 main = doFile "top95.txt"
 
-easy   = "..3.2.6..9..3.5..1..18.64....81.29..7.......8..67.82....26.95..8..2.3..9..5.1.3.."
-hard   = "4.....8.5.3..........7......2.....6.....8.4......1.......6.3.7.5..2.....1.4......"
+easy = "..3.2.6..9..3.5..1..18.64....81.29..7.......8..67.82....26.95..8..2.3..9..5.1.3.."
+hard = "4.....8.5.3..........7......2.....6.....8.4......1.......6.3.7.5..2.....1.4......"
