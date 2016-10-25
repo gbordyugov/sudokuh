@@ -152,11 +152,10 @@ valuesToString v = answer where
 
 parseGrid :: String -> Maybe Values
 parseGrid s =
-  foldM (\v c -> assign v c) iniValues $ zip allcells s'
+  foldM (\v c -> assign v c) iniValues $ zip squares s'
   where s'       = filter (`elem` ".0123456789") s
-        allcells = cross rows cols
 
--- doFile :: String -> IO ()
+doFile :: String -> IO ()
 doFile fname = do
   f <- readFile fname
   mapM_ solveAndDisply $ lines f
@@ -164,5 +163,4 @@ doFile fname = do
 main = doFile "top95.txt"
 
 easy   = "..3.2.6..9..3.5..1..18.64....81.29..7.......8..67.82....26.95..8..2.3..9..5.1.3.."
-medium = "4.....8.5.3..........7......2.....6.....8.4......1.......6.3.7.5..2.....1.4......"
 hard   = "4.....8.5.3..........7......2.....6.....8.4......1.......6.3.7.5..2.....1.4......"
