@@ -159,7 +159,7 @@ parseGrid s =
 -- doFile :: String -> IO ()
 doFile fname = do
   f <- readFile fname
-  mapM_ (\l -> solveAndDisply l) (lines f)
+  mapM_ solveAndDisply $ lines f
 
 main = doFile "top95.txt"
 
