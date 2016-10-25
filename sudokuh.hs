@@ -1,12 +1,12 @@
 
 -- 
--- An implementation of Peter Norvig's sudoku
+-- An implementation of Peter Norvig's sudoku solver
 -- http://norvig.com/sudoku.html
 --
 -- instead of maps/dictionaries, I am using Data.Array indexed by
 -- tuples
 --
--- still work in progress, very initial
+-- still work in progress
 --
 
 import Control.Monad
@@ -81,6 +81,7 @@ eliminate v (i, d) =
                          else Just $ v // [(i, e)]
           in elt >>= \x -> checkUnits x (i, d)
 
+
 checkUnits :: Values -> (Index, Digit) -> Maybe Values
 checkUnits v (i, d) =
   let us  = units ! i
@@ -91,36 +92,23 @@ checkUnits v (i, d) =
     f u (j:[]) = assign u (j, d)
     f u _      = Just u
 
-parseGrid :: String -> Maybe Values
-parseGrid s =
-  foldM (\v c -> assign v c) iniValues $ zip allcells s'
-  where s'       = filter (`elem` ".0123456789") s
-        allcells = cross rows cols
 
---
--- output functions
---
-displayMValues :: Maybe Values -> IO ()
-displayMValues (Just v) = (putStrLn . valuesToString) v
-displayMValues _ = putStrLn "no solution"
+search :: Maybe Values -> Maybe Values
+search Nothing = Nothing
+search (Just v) =
+  let lens    = map length [v!i | i <- squares]
+      notdone = filter (/=1) lens -- the ambigous ones
+  in if length notdone == 0
+     then Just v
+     else let (n, s) = minimum [(length (v!s), s) | s <- squares
+                                                  , length (v!s) > 1]
+          in some [search (assign v (s, d)) | d <- v!s]
+  where
+    some []            = Nothing
+    some ((Just x):xs) = Just x
+    some (_:xs)        = some xs
 
--- valuesToString :: Values -> String
-valuesToString v = answer where
-  eles = elems v
-  s0 = groupsOf 3 $ groupsOf 3 $ groupsOf 3 $ eles
-  s1 = (map . map . map . map) (center width) s0
-  s2 = (map . map . map) concat               s1
-  s3 = (map . map) (intercalate "|")          s2
-  s4 = map (intercalate "\n")                 s3
-  answer = intercalate hruler                 s4
-  r = replicate
-  width = 1 + (maximum $ map length eles)
-  hruler = "\n" ++ (intercalate "+" $ r 3 $ concat $ r 3 $ r width '-')
-                ++ "\n"
 
--- splits a list in groups of n
--- it's faster to reverse the result
--- than keeping conc'ing to growing acc
 groupsOf :: Int -> [a] -> [[a]]
 groupsOf n xs = reverse $ grp n xs [] where
   grp n [] acc = acc
@@ -138,8 +126,43 @@ center n s = if length s >= n then s else prefix ++ s ++ suffix
     prefix = replicate before ' '
     suffix = replicate after  ' '
 
-testGrid1 = "12"
-testGrid2 = "4.....8.5.3..........7......2.....6.....8.4......1.......6.3.7.5..2.....1.4......"
-testGrid3 = "003020600900305001001806400008102900700000008006708200002609500800203009005010300"
+solve :: String -> Maybe Values
+solve = search . parseGrid
 
-(Just x1) = parseGrid "1"
+displayMValues :: Maybe Values -> IO ()
+displayMValues (Just v) = (putStrLn . (++"\n") . valuesToString) v
+displayMValues _ = putStrLn "no solution"
+
+solveAndDisply :: String -> IO ()
+solveAndDisply = displayMValues . solve
+
+valuesToString :: Values -> String
+valuesToString v = answer where
+  eles = elems v
+  s0 = groupsOf 3 $ groupsOf 3 $ groupsOf 3 $ eles
+  s1 = (map . map . map . map) (center width) s0
+  s2 = (map . map . map) concat               s1
+  s3 = (map . map) (intercalate "|")          s2
+  s4 = map (intercalate "\n")                 s3
+  answer = intercalate hruler                 s4
+  r = replicate
+  width = 1 + (maximum $ map length eles)
+  hruler = "\n" ++ (intercalate "+" $ r 3 $ concat $ r 3 $ r width '-')
+                ++ "\n"
+
+parseGrid :: String -> Maybe Values
+parseGrid s =
+  foldM (\v c -> assign v c) iniValues $ zip allcells s'
+  where s'       = filter (`elem` ".0123456789") s
+        allcells = cross rows cols
+
+-- doFile :: String -> IO ()
+doFile fname = do
+  f <- readFile fname
+  mapM_ (\l -> solveAndDisply l) (lines f)
+
+main = doFile "top95.txt"
+
+easy = "..3.2.6..9..3.5..1..18.64....81.29..7.......8..67.82....26.95..8..2.3..9..5.1.3.."
+medium = "4.....8.5.3..........7......2.....6.....8.4......1.......6.3.7.5..2.....1.4......"
+hard = "4.....8.5.3..........7......2.....6.....8.4......1.......6.3.7.5..2.....1.4......"
