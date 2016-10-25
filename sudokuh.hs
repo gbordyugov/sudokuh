@@ -79,7 +79,17 @@ eliminate v (i, d) =
                     else if l == 1
                          then assign v (i, head e)
                          else Just $ v // [(i, e)]
-          in elt
+          in elt >>= \x -> checkUnits x (i, d)
+
+checkUnits :: Values -> (Index, Digit) -> Maybe Values
+checkUnits v (i, d) =
+  let us  = units ! i
+      jss = [[j | j <- u, d `elem` (v ! j)] | u <- us]
+  in foldM f v jss
+  where
+    f u []     = Nothing
+    f u (j:[]) = assign u (j, d)
+    f u _      = Just u
 
 parseGrid :: String -> Maybe Values
 parseGrid s =
@@ -104,7 +114,7 @@ valuesToString v = answer where
   s4 = map (intercalate "\n")                 s3
   answer = intercalate hruler                 s4
   r = replicate
-  width = 2 + (maximum $ map length eles)
+  width = 1 + (maximum $ map length eles)
   hruler = "\n" ++ (intercalate "+" $ r 3 $ concat $ r 3 $ r width '-')
                 ++ "\n"
 
