@@ -17,11 +17,26 @@ import Data.Char
 import Data.Set (Set, fromList, toList)
 
 
+{-
+--
+-- custom types seem to be really slow
+--
 data Row = RA | RB | RC | RD | RE | RF | RG | RH | RI
            deriving (Show, Eq, Ord, Enum, Ix)
 
 data Column = C1 | C2 | C3 | C4 | C5 | C6 | C7 | C8 | C9
               deriving (Show, Eq, Ord, Enum, Ix)
+
+rows = [RA .. ]
+cols = [C1 .. ]
+bnds = ((RA, C1), (RI, C9))
+-}
+
+type Row    = Char
+type Column = Char
+rows = ['A'..'I']
+cols = ['1'..'9']
+bnds = (('A', '1'), ('I', '9'))
 
 type Index = (Row, Column) -- a single cell in the matrix
 type Unit = [Index] -- a set of cells
@@ -29,9 +44,6 @@ type Unit = [Index] -- a set of cells
 type Digit = Char
 
 digits = ['1'..'9']
-cols = [C1 .. ]
-rows = [RA .. ]
-bnds = ((RA, C1), (RI, C9))
 
 remove e = filter (/=e) -- drops element from a list
 
@@ -41,8 +53,8 @@ squares = cross rows cols
 unitlist :: [Unit]
 unitlist = [cross rows [c]  | c  <- cols] ++
            [cross [r]  cols | r  <- rows] ++
-           [cross  rs   cs  | rs <- groupsOf 3 [RA ..],
-                              cs <- groupsOf 3 [C1 ..]]
+           [cross  rs   cs  | rs <- groupsOf 3 rows,
+                              cs <- groupsOf 3 cols]
 
 fillArray :: (Index -> a) -> Array Index a
 fillArray f = listArray bnds [ f s | s <- range bnds]
@@ -71,9 +83,9 @@ assign :: Values -> (Index, Digit) -> Maybe Values
 assign v (_, '.') = Just v
 assign v (_, '0') = Just v
 assign v (i, d) =
-  let u = v // [(i, [d])]
-      l = zip (peers ! i) $ repeat d
-  in foldM eliminate u l
+  let o = delete d $ v ! i
+      l = zip (repeat i) o
+  in foldM eliminate v l
 
 
 --
@@ -84,12 +96,14 @@ eliminate v (i, d) =
   let ds = v ! i                -- possible digits before elimination
   in if d `notElem` ds          -- is already eliminated?
      then Just v                -- do nothing
-     else let e = remove d ds   -- remaining digits
-          in let u = case (length e) of
-                  0 -> Nothing               -- contradiction
-                  1 -> assign v (i, head e)  -- assign it
-                  _ -> Just $ v // [(i, e)]  -- nothing special
-             in u >>= \x -> checkUnits x (i, d)
+     else let e = delete d ds   -- remaining digits
+              u = v // [(i, e)]
+          in let w = case e of
+                  []  -> Nothing               -- contradiction
+                  [c] -> foldM eliminate u (zip (peers ! i) (repeat c))
+                  _   -> Just u                -- nothing special
+             in w >>= \x -> checkUnits x (i, d)
+             -- in w >>= \x -> return x
 
 
 --
