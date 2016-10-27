@@ -14,6 +14,7 @@ object SudokuSolver {
                  (for(r <- List("ABC", "DEF", "GHI");
                       c <- List("123", "456", "789"))
                   yield(cross(r.toList, c.toList)))
-  val units = Map { for (s <- squares; u <- unitlist if u contains s)
-                    yield((????))
+
+  val units = squares.map(s => (s, unitlist.filter(u => u contains s))).toMap
+  val peers = squares.map(s => (s, units(s).flatten.toSet - List(s))).toMap
 }
