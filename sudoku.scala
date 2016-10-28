@@ -75,7 +75,18 @@ object SudokuSolver {
     val sep = "-"*width*3
     val hSep = "\n" + sep + "+" + sep + "+" + sep + "\n"
 
-    val ps = ss.map(_.padTo(width, ' '))
+    def center(s: String, p: Int): String = {
+      val l = s.length
+      if (p <= l)
+        s
+      else {
+        val nSpaces = p - l
+        val pref: Int = nSpaces / 2
+        var suff: Int = nSpaces - pref
+        " "*pref + s + " "*suff
+      }
+    }
+    val ps = ss.map(center(_, width))
 
     def combine[T](ls: List[T], s: String) =
       groupsOf3(ls).map(_.mkString(s))
