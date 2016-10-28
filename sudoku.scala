@@ -63,7 +63,6 @@ object SudokuSolver {
 
   val iniValues: Values = squares.map(s => (s -> digits)).toMap
 
-
   def parse(s: String):Option[Values] = ???
   def assign(v: Values, c: Cell, d: Digit): Option[Values] = ???
   def eliminate(v: Values, c: Cell, d: Digit): Option[Values] = ???
@@ -77,8 +76,7 @@ object SudokuSolver {
 
     def center(s: String, p: Int): String = {
       val l = s.length
-      if (p <= l)
-        s
+      if (p <= l) s
       else {
         val nSpaces = p - l
         val pref: Int = nSpaces / 2
@@ -86,10 +84,10 @@ object SudokuSolver {
         " "*pref + s + " "*suff
       }
     }
+
     val ps = ss.map(center(_, width))
 
-    def combine[T](ls: List[T], s: String) =
-      groupsOf3(ls).map(_.mkString(s))
+    def combine[T](ls: List[T], s: String) = groupsOf(ls, 3).map(_.mkString(s))
 
     val hblocks = combine(ps, "")
     val lines   = combine(hblocks, "|")
@@ -99,8 +97,8 @@ object SudokuSolver {
     grid.head
   }
 
-  def groupsOf3[T](xs: List[T]) : List[List[T]] = xs match {
+  def groupsOf[T](xs: List[T], n: Int) : List[List[T]] = xs match {
     case Nil => Nil
-    case _   => xs.take(3) :: groupsOf3(xs.drop(3))
+    case _   => xs.take(n) :: groupsOf(xs.drop(n), n)
   }
 }
