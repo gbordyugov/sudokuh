@@ -70,11 +70,22 @@ object SudokuSolver {
 
   def valuesToString(v: Values) = {
     val ss = squares.map(v(_))
-    val w = 1 + ss.map(_.length).max
-    val ps = ss.map(_.padTo(w, ' '))
 
-    val hblocks = groupsOf3(ps)      // 27 horizontal stretches
-    hblocks
+    val width = 1 + ss.map(_.length).max
+    val sep = "-"*width*3
+    val hSep = "\n" + sep + "+" + sep + "+" + sep + "\n"
+
+    val ps = ss.map(_.padTo(width, ' '))
+
+    def combine[T](ls: List[T], s: String) =
+      groupsOf3(ls).map(_.mkString(s))
+
+    val hblocks = combine(ps, "")
+    val lines   = combine(hblocks, "|")
+    val vblocks = combine(lines, "\n")
+    val grid    = combine(vblocks, hSep)
+
+    grid.head
   }
 
   def groupsOf3[T](xs: List[T]) : List[List[T]] = xs match {
