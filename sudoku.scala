@@ -15,7 +15,7 @@ object SudokuSolver {
   val rows = 'A' to 'I' toList
   val cols = '1' to '9' toList
 
-  val digits = '1' to '9' toSet
+  val digits = "123456789"
 
   def cross[A, B](as: List[A], bs: List[B]): List[(A, B)] = 
     for(a <- as; b <- bs) yield((a, b))
@@ -36,6 +36,7 @@ object SudokuSolver {
 
   def test() = {
     val cell = ('C', '2')
+    assert(digits.length == 9)
     assert(squares.length == 81)
     assert(unitlist.length == 27)
     assert(all(squares.map(units(_).length == 3)))
@@ -57,7 +58,7 @@ object SudokuSolver {
     println("All tests passed")
   }
 
-  type PossibleDigits = Set[Digit]
+  type PossibleDigits = String
   type Values = Map[Cell, PossibleDigits]
 
   val iniValues: Values = squares.map(s => (s -> digits)).toMap
@@ -68,9 +69,12 @@ object SudokuSolver {
   def eliminate(v: Values, c: Cell, d: Digit): Option[Values] = ???
 
   def valuesToString(v: Values) = {
-    val ds = squares.map(v(_))
-    val w = 1 + ds.map(_.toList.length).max
-    val cs = groupsOf3(groupsOf3(groupsOf3(groupsOf3(ds))))
+    val ss = squares.map(v(_))
+    val w = 1 + ss.map(_.length).max
+    val ps = ss.map(_.padTo(w, ' '))
+
+    val hblocks = groupsOf3(ps)      // 27 horizontal stretches
+    hblocks
   }
 
   def groupsOf3[T](xs: List[T]) : List[List[T]] = xs match {
