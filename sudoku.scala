@@ -60,7 +60,7 @@ object SudokuSolver {
   type PossibleDigits = Set[Digit]
   type Values = Map[Cell, PossibleDigits]
 
-  val iniValues :Values = squares.map(s => (s -> digits)).toMap
+  val iniValues: Values = squares.map(s => (s -> digits)).toMap
 
 
   def parse(s: String):Option[Values] = ???
