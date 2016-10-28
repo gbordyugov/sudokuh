@@ -189,18 +189,18 @@ solveAndDisplay :: String -> IO ()
 solveAndDisplay = displayMValues . solve
 
 valuesToString :: Values -> String
-valuesToString v = answer where
+valuesToString v = s4 where
   eles = elems v
-  s0 = groupsOf 3 $ groupsOf 3 $ groupsOf 3 eles
-  s1 = (map . map . map . map) (center width) s0
-  s2 = (map . map . map) concat               s1
-  s3 = (map . map) (intercalate "|")          s2
-  s4 = map (intercalate "\n")                 s3
-  answer = intercalate hruler                 s4
+  s0 = map (center width)    eles
+  s1 = mg (intercalate "")   s0
+  s2 = mg (intercalate "|")  s1
+  s3 = mg (intercalate "\n") s2
+  s4 = intercalate hruler    s3
   r = replicate
   width = 1 + maximum (map length eles)
   hruler = "\n" ++ intercalate "+" (r 3 $ concat $ r 3 $ r width '-')
                 ++ "\n"
+  mg f xs = map f $ groupsOf 3 xs
 
 parseGrid :: String -> Maybe Values
 parseGrid s =
