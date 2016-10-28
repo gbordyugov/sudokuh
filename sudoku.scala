@@ -1,3 +1,10 @@
+/*
+ *
+ * Scala translation of Peter Norvig's sudoku solver
+ * http://norvig.com/sudoku.html
+ *
+ */
+
 object SudokuSolver {
   val testCell = ('C', '2')
 
