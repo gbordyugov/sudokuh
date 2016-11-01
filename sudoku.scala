@@ -104,5 +104,4 @@ object SudokuSolver {
 
     grid.head
   }
-
 }
