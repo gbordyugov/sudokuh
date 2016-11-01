@@ -4,6 +4,24 @@
  * http://norvig.com/sudoku.html
  */
 
+object Utils {
+  def center(s: String, p: Int): String = {
+    val l = s.length
+    if (p <= l) s
+    else {
+      val nSpaces = p - l
+      val pref: Int = nSpaces / 2
+      var suff: Int = nSpaces - pref
+      " "*pref + s + " "*suff
+    }
+  }
+
+  def groupsOf[T](xs: List[T], n: Int) : List[List[T]] = xs match {
+    case Nil => Nil
+    case _   => xs.take(n) :: groupsOf(xs.drop(n), n)
+  }
+}
+
 object SudokuSolver {
   type Row = Char
   type Col = Char
@@ -74,20 +92,10 @@ object SudokuSolver {
     val sep = "-"*width*3
     val hSep = "\n" + sep + "+" + sep + "+" + sep + "\n"
 
-    def center(s: String, p: Int): String = {
-      val l = s.length
-      if (p <= l) s
-      else {
-        val nSpaces = p - l
-        val pref: Int = nSpaces / 2
-        var suff: Int = nSpaces - pref
-        " "*pref + s + " "*suff
-      }
-    }
+    val ps = ss.map(Utils.center(_, width))
 
-    val ps = ss.map(center(_, width))
-
-    def combine[T](ls: List[T], s: String) = groupsOf(ls, 3).map(_.mkString(s))
+    def combine[T](ls: List[T], s: String) =
+      Utils.groupsOf(ls, 3).map(_.mkString(s))
 
     val hblocks = combine(ps, "")
     val lines   = combine(hblocks, "|")
@@ -97,8 +105,4 @@ object SudokuSolver {
     grid.head
   }
 
-  def groupsOf[T](xs: List[T], n: Int) : List[List[T]] = xs match {
-    case Nil => Nil
-    case _   => xs.take(n) :: groupsOf(xs.drop(n), n)
-  }
 }
