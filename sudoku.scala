@@ -5,6 +5,9 @@
  */
 
 object Utils {
+  def cross[A, B](as: List[A], bs: List[B]): List[(A, B)] = 
+    for(a <- as; b <- bs) yield((a, b))
+
   def center(s: String, p: Int): String = {
     val l = s.length
     if (p <= l) s
@@ -20,6 +23,9 @@ object Utils {
     case Nil => Nil
     case _   => xs.take(n) :: groupsOf(xs.drop(n), n)
   }
+
+  def  all(bs: List[Boolean]): Boolean = bs.foldLeft(true )(_ && _)
+  def some(bs: List[Boolean]): Boolean = bs.foldLeft(false)(_ || _)
 }
 
 object SudokuSolver {
@@ -35,30 +41,24 @@ object SudokuSolver {
 
   val digits = "123456789"
 
-  def cross[A, B](as: List[A], bs: List[B]): List[(A, B)] = 
-    for(a <- as; b <- bs) yield((a, b))
+  val squares = Utils.cross(rows, cols)
 
-  val squares = cross(rows, cols)
-
-  val unitlist = (for(c <- cols) yield(cross(rows,    List(c)))) ++
-                 (for(r <- rows) yield(cross(List(r), cols   ))) ++
+  val unitlist = (for(c <- cols) yield(Utils.cross(rows,    List(c)))) ++
+                 (for(r <- rows) yield(Utils.cross(List(r), cols   ))) ++
                  (for(r <- List("ABC", "DEF", "GHI");
                       c <- List("123", "456", "789"))
-                  yield(cross(r.toList, c.toList)))
+                  yield(Utils.cross(r.toList, c.toList)))
 
   val units = squares.map(s => (s, unitlist.filter(_ contains s))).toMap
   val peers = squares.map(s => (s, (units(s).flatten.toSet - s))).toMap
-
-  def  all(bs: List[Boolean]): Boolean = bs.foldLeft(true )(_ && _)
-  def some(bs: List[Boolean]): Boolean = bs.foldLeft(false)(_ || _)
 
   def test() = {
     val cell = ('C', '2')
     assert(digits.length == 9)
     assert(squares.length == 81)
     assert(unitlist.length == 27)
-    assert(all(squares.map(units(_).length == 3)))
-    assert(all(squares.map(peers(_).toList.length == 20)))
+    assert(Utils.all(squares.map(units(_).length == 3)))
+    assert(Utils.all(squares.map(peers(_).toList.length == 20)))
     assert(units(cell) ==
       List(
         List(('A','2'), ('B','2'), ('C','2'), ('D','2'), ('E','2'),
