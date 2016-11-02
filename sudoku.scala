@@ -4,6 +4,14 @@
  * http://norvig.com/sudoku.html
  */
 
+/*
+ * TODO:
+ *  - foldM for Option[T]
+ *  - parse
+ *  - assign
+ *  - eliminate
+ */
+
 object Utils {
   def center(s: String, p: Int): String = {
     val l = s.length
@@ -30,8 +38,8 @@ object SudokuSolver {
 
   val testCell = ('C', '2')
 
-  val rows = 'A' to 'I' toList
-  val cols = '1' to '9' toList
+  val rows = ('A' to 'I').toList
+  val cols = ('1' to '9').toList
 
   val digits = "123456789"
 
@@ -81,11 +89,11 @@ object SudokuSolver {
 
   val iniValues: Values = squares.map(s => (s -> digits)).toMap
 
-  def parse(s: String):Option[Values] = ???
+  def parse(s: String): Option[Values] = ???
   def assign(v: Values, c: Cell, d: Digit): Option[Values] = ???
   def eliminate(v: Values, c: Cell, d: Digit): Option[Values] = ???
 
-  def valuesToString(v: Values) = {
+  def valuesToString(v: Values): String = {
     val ss = squares.map(v(_))
 
     val width = 1 + ss.map(_.length).max
@@ -104,4 +112,7 @@ object SudokuSolver {
 
     grid.head
   }
+
+  val easyProblem = "..3.2.6..9..3.5..1..18.64....81.29..7.......8..67.82....26.95..8..2.3..9..5.1.3.."
+  val hardProblem = "4.....8.5.3..........7......2.....6.....8.4......1.......6.3.7.5..2.....1.4......"
 }
