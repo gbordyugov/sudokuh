@@ -34,6 +34,32 @@ object Utils {
 
   def  all(bs: List[Boolean]): Boolean = bs.foldLeft(true )(_ && _)
   def some(bs: List[Boolean]): Boolean = bs.foldLeft(false)(_ || _)
+
+  def foldLOption[A,B](l: List[A], z: Option[B],
+                       f: (B, A) => Option[B]): Option[B] = l match {
+    case Nil   => z
+    case x::xs => foldLOption(xs, z.flatMap(a => f(a, x)), f)
+  }
+
+  def foldROption[A,B](l: List[A], z: Option[B],
+                       f: (A, B) => Option[B]): Option[B] = l match {
+    case Nil   => z
+    case x::xs => foldROption(xs, z, f).flatMap(b => f(x, b))
+  }
+
+  val l: List[Int] = List(1, 2, 3, 4, 5)
+
+  val testFoldLOptionSum =
+    foldLOption(l, Some(0), (x: Int, y: Int) => Some(x+y))
+  val testFoldLOptionProd =
+    foldLOption(l, Some(1), (x: Int, y: Int) => Some(x*y))
+  val testFoldROptionSum =
+    foldROption(l, Some(0), (x: Int, y: Int) => Some(x+y))
+  val testFoldROptionProd =
+    foldROption(l, Some(1), (x: Int, y: Int) => Some(x*y))
+
+  val testFolds = (testFoldLOptionSum, testFoldLOptionProd,
+                   testFoldROptionSum, testFoldROptionProd)
 }
 
 object SudokuSolver {
