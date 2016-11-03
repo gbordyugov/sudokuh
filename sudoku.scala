@@ -35,28 +35,26 @@ object Utils {
   def  all(bs: List[Boolean]): Boolean = bs.foldLeft(true )(_ && _)
   def some(bs: List[Boolean]): Boolean = bs.foldLeft(false)(_ || _)
 
-  def foldLOption[A,B](f: (B, A) => Option[B],
-                       z: Option[B], l: List[A]): Option[B] = l match {
+  def foldLOption[A,B](l: List[A])(z: Option[B])
+                      (f: (B, A) => Option[B]): Option[B] = l match {
     case Nil   => z
-    case x::xs => foldLOption(f, z.flatMap(a => f(a, x)), xs)
+    case x::xs => foldLOption(xs)(z.flatMap(a => f(a, x)))(f)
   }
 
-  def foldROption[A,B](f: (A, B) => Option[B],
-                       z: Option[B], l: List[A]): Option[B] = l match {
+  def foldROption[A,B](l: List[A])(z: Option[B])
+                      (f: (A, B) => Option[B]): Option[B] = l match {
     case Nil   => z
-    case x::xs => foldROption(f, z, xs).flatMap(b => f(x, b))
+    case x::xs => foldROption(xs)(z)(f).flatMap(b => f(x, b))
   }
 
   val l: List[Int] = List(1, 2, 3, 4, 5)
+  val (s0, s1) = (Some(0), Some(1))
 
-  val testFoldLOptionSum =
-    foldLOption((x: Int, y: Int) => Some(x+y), Some(0), l)
-  val testFoldLOptionProd =
-    foldLOption((x: Int, y: Int) => Some(x*y), Some(1), l)
-  val testFoldROptionSum =
-    foldROption((x: Int, y: Int) => Some(x+y), Some(0), l)
-  val testFoldROptionProd =
-    foldROption((x: Int, y: Int) => Some(x*y), Some(1), l)
+  val testFoldLOptionSum  = foldLOption(l)(s0)((x, y) => Some(x+y))
+  val testFoldROptionSum  = foldROption(l)(s0)((x, y) => Some(x+y))
+
+  val testFoldLOptionProd = foldLOption(l)(s1)((x, y) => Some(x*y))
+  val testFoldROptionProd = foldROption(l)(s1)((x, y) => Some(x*y))
 
   val testFolds = (testFoldLOptionSum, testFoldLOptionProd,
                    testFoldROptionSum, testFoldROptionProd)
