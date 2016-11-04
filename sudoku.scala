@@ -33,31 +33,6 @@ object Utils {
   }
 
   def  all(bs: List[Boolean]): Boolean = bs.foldLeft(true )(_ && _)
-  def some(bs: List[Boolean]): Boolean = bs.foldLeft(false)(_ || _)
-
-  def foldLOption[A,B](l: List[A])(z: Option[B])
-                      (f: (B, A) => Option[B]): Option[B] = l match {
-    case Nil   => z
-    case x::xs => foldLOption(xs)(z.flatMap(a => f(a, x)))(f)
-  }
-
-  def foldROption[A,B](l: List[A])(z: Option[B])
-                      (f: (A, B) => Option[B]): Option[B] = l match {
-    case Nil   => z
-    case x::xs => foldROption(xs)(z)(f).flatMap(b => f(x, b))
-  }
-
-  val l: List[Int] = List(1, 2, 3, 4, 5)
-  val (s0, s1) = (Some(0), Some(1))
-
-  val testFoldLOptionSum  = foldLOption(l)(s0)((x, y) => Some(x+y))
-  val testFoldROptionSum  = foldROption(l)(s0)((x, y) => Some(x+y))
-
-  val testFoldLOptionProd = foldLOption(l)(s1)((x, y) => Some(x*y))
-  val testFoldROptionProd = foldROption(l)(s1)((x, y) => Some(x*y))
-
-  val testFolds = (testFoldLOptionSum, testFoldLOptionProd,
-                   testFoldROptionSum, testFoldROptionProd)
 }
 
 object SudokuSolver {
@@ -139,4 +114,30 @@ object SudokuSolver {
 
   val easyProblem = "..3.2.6..9..3.5..1..18.64....81.29..7.......8..67.82....26.95..8..2.3..9..5.1.3.."
   val hardProblem = "4.....8.5.3..........7......2.....6.....8.4......1.......6.3.7.5..2.....1.4......"
+}
+
+object Folds {
+  def foldl[A,B](l: List[A]) (z: B) (f: (B, A) => B): B = {
+    def g(x: A, k: B => B)(y: B): B = k(f(y, x))
+    l.foldRight((x: B) => x) (g) (z)
+  }
+
+  def foldr[A,B](l: List[A]) (z: B) (f: (A, B) => B): B = {
+    def g(k: B => B, x: A)(y: B): B = k(f(x, y))
+    l.foldLeft((x: B) => x) (g) (z)
+  }
+
+  def foldlO[A,B](l: List[A])(z: B)
+                 (f: (B, A) => Option[B]): Option[B] = {
+    def g(x: A, k: B => Option[B])(z: B): Option[B]
+      = f(z, x).flatMap(k(_))
+    l.foldRight((x: B) => Option(x))(g)(z)
+  }
+
+  def foldrO[A,B](l: List[A])(z: B)
+                 (f: (A, B) => Option[B]): Option[B] = {
+    def g(k: B => Option[B], x: A)(z: B): Option[B]
+      = f(x, z).flatMap(k(_))
+    l.foldLeft((x: B) => Option(x))(g)(z)
+  }
 }
