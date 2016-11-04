@@ -88,8 +88,13 @@ object SudokuSolver {
 
   val iniValues: Values = squares.map(s => (s -> digits)).toMap
 
-  def parse(s: String): Option[Values] = ???
+  def parse(s: String): Option[Values] = {
+    Folds.foldlO(squares.zip(s))(iniValues)
+                {(v, p) => p match {case (c, d) => assign (v, c, d)}}
+  }
+
   def assign(v: Values, c: Cell, d: Digit): Option[Values] = ???
+
   def eliminate(v: Values, c: Cell, d: Digit): Option[Values] = ???
 
   def valuesToString(v: Values): String = {
@@ -127,14 +132,14 @@ object Folds {
     l.foldLeft((x: B) => x) (g) (z)
   }
 
-  def foldlO[A,B](l: List[A])(z: B)
+  def foldlO[A,B](l: List[A]) (z: B)
                  (f: (B, A) => Option[B]): Option[B] = {
     def g(x: A, k: B => Option[B])(z: B): Option[B] =
       f(z, x).flatMap(k(_))
     l.foldRight((x: B) => Option(x))(g)(z)
   }
 
-  def foldrO[A,B](l: List[A])(z: B)
+  def foldrO[A,B](l: List[A]) (z: B)
                  (f: (A, B) => Option[B]): Option[B] = {
     def g(k: B => Option[B], x: A)(z: B): Option[B] =
       f(x, z).flatMap(k(_))
