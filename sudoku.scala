@@ -7,6 +7,7 @@
 /*
  * TODO:
  *  - eliminate
+ *  - search
  */
 
 object Utils {
@@ -111,37 +112,36 @@ object SudokuSolver {
     }
 
 
+  /*
+   * work in progress
+   */
   def eliminate(v: Values, c: Cell, d: Digit): Option[Values] = {
-    def remove(v: Values, c: Cell, d: Digit): Option[Values] = {
-      for {
-        olds <- v.get(c)
-        news =  olds.filterNot(_==d)
-        u = v - c + (c -> news)
-      } yield u
+    // println("eliminating " + d + " from " + c)
+    v.get(c).flatMap {
+      digs => {
+        if (!digs.contains(d))
+          Option(v)
+        else {
+          val e = digs.filterNot(_==d)
+          val u = v - c + (c -> e)
+          e.toList match {
+            case Nil       => None // eliminated too much
+            case x::Nil    => peers.get(c).flatMap {
+              pes => {
+                val ps = pes.toList
+                val ds = List.fill(ps.length)(x)
+                Folds.foldlO(ps.zip(ds))(u) {
+                  (v, p) => eliminate(v, p._1, p._2)
+                }
+              }
+            }
+            case otherwise => Option(u)
+          }
+        }
+      }
     }
-
-    def filterEmpty(v: Values, c: Cell): Option[Values] = {
-      for {
-        digs <- v.get(c)
-        if(digs.length > 0)
-      } yield v
-    }
-
-    /*
-     * this one is not working
-     */
-    def checkForLast(v: Values, c: Cell): Option[Values] = {
-      for {
-        digs <- v.get(c)
-        if(digs.length == 1)
-      } yield v
-    }
-
-    for {
-      u <- remove(v, c, d)
-      w <- filterEmpty(v, c)
-    } yield w
   }
+ 
 
 
 
@@ -172,6 +172,7 @@ object SudokuSolver {
   val hardProblem = "4.....8.5.3..........7......2.....6.....8.4......1.......6.3.7.5..2.....1.4......"
 }
 
+
 object Folds {
   def foldl[A,B](l: List[A]) (z: B) (f: (B, A) => B): B = {
     def g(x: A, k: B => B)(y: B): B = k(f(y, x))
@@ -197,3 +198,8 @@ object Folds {
     l.foldLeft((x: B) => Option(x))(g)(z)
   }
 }
+
+def goEasy() =
+  println(SudokuSolver.valuesToString(SudokuSolver.parse(SudokuSolver.easyProblem)))
+def goHard() =
+  println(SudokuSolver.valuesToString(SudokuSolver.parse(SudokuSolver.hardProblem)))
