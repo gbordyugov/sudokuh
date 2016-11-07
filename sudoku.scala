@@ -6,9 +6,6 @@
 
 /*
  * TODO:
- *  x foldM for Option[T]
- *  - parse
- *  - assign
  *  - eliminate
  */
 
@@ -40,6 +37,7 @@ object SudokuSolver {
   type Col = Char
   type Digit = Char
   type Cell = (Row, Col)
+  type Square = Cell
 
   val testCell = ('C', '2')
 
@@ -48,7 +46,7 @@ object SudokuSolver {
 
   val digits = "123456789"
 
-  val squares = Utils.cross(rows, cols)
+  val squares: List[Cell] = Utils.cross(rows, cols)
 
   val unitlist = (for(c <- cols) yield(Utils.cross(rows,    List(c)))) ++
                  (for(r <- rows) yield(Utils.cross(List(r), cols   ))) ++
@@ -83,38 +81,91 @@ object SudokuSolver {
     println("All tests passed")
   }
 
+
   type PossibleDigits = String
+
   type Values = Map[Cell, PossibleDigits]
+
 
   val iniValues: Values = squares.map(s => (s -> digits)).toMap
 
+
   def parse(s: String): Option[Values] = {
     Folds.foldlO(squares.zip(s))(iniValues)
-                {(v, p) => p match {case (c, d) => assign (v, c, d)}}
+      { (v, p) => assign(v, p._1, p._2) }
   }
 
-  def assign(v: Values, c: Cell, d: Digit): Option[Values] = ???
 
-  def eliminate(v: Values, c: Cell, d: Digit): Option[Values] = ???
+  def assign(v: Values, c: Cell, d: Digit): Option[Values] = 
+    if (!digits.contains(d))
+      Option(v)
+    else {
+      // println("assigning " + d + " to " + c)
+      for {
+        digits <- v.get(c)
+        others =  digits.filterNot(_==d)
+        indxes =  List.fill(others.length)(c)
+        u <- Folds.foldlO(indxes.zip(others))(v)
+          { (v, p) => eliminate(v, p._1, p._2) }
+      } yield u
+    }
 
-  def valuesToString(v: Values): String = {
-    val ss = squares.map(v(_))
 
-    val width = 1 + ss.map(_.length).max
-    val sep = "-"*width*3
-    val hSep = "\n" + sep + "+" + sep + "+" + sep + "\n"
+  def eliminate(v: Values, c: Cell, d: Digit): Option[Values] = {
+    def remove(v: Values, c: Cell, d: Digit): Option[Values] = {
+      for {
+        olds <- v.get(c)
+        news =  olds.filterNot(_==d)
+        u = v - c + (c -> news)
+      } yield u
+    }
 
-    val ps = ss.map(Utils.center(_, width))
+    def filterEmpty(v: Values, c: Cell): Option[Values] = {
+      for {
+        digs <- v.get(c)
+        if(digs.length > 0)
+      } yield v
+    }
 
-    def combine[T](ls: List[T], s: String) =
-      Utils.groupsOf(ls, 3).map(_.mkString(s))
+    /*
+     * this one is not working
+     */
+    def checkForLast(v: Values, c: Cell): Option[Values] = {
+      for {
+        digs <- v.get(c)
+        if(digs.length == 1)
+      } yield v
+    }
 
-    val hblocks = combine(ps, "")
-    val lines   = combine(hblocks, "|")
-    val vblocks = combine(lines, "\n")
-    val grid    = combine(vblocks, hSep)
+    for {
+      u <- remove(v, c, d)
+      w <- filterEmpty(v, c)
+    } yield w
+  }
 
-    grid.head
+
+
+  def valuesToString(v: Option[Values]): String = v match {
+    case None => new String("no solution")
+    case Some(v) => {
+      val ss = squares.map(v(_))
+
+      val width = 1 + ss.map(_.length).max
+      val sep = "-"*width*3
+      val hSep = "\n" + sep + "+" + sep + "+" + sep + "\n"
+
+      val ps = ss.map(Utils.center(_, width))
+
+      def combine[T](ls: List[T], s: String) =
+        Utils.groupsOf(ls, 3).map(_.mkString(s))
+
+      val hblocks = combine(ps, "")
+      val lines   = combine(hblocks, "|")
+      val vblocks = combine(lines, "\n")
+      val grid    = combine(vblocks, hSep)
+
+      grid.head
+    }
   }
 
   val easyProblem = "..3.2.6..9..3.5..1..18.64....81.29..7.......8..67.82....26.95..8..2.3..9..5.1.3.."
