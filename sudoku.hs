@@ -76,8 +76,7 @@ iniValues = fillArray $ const digits
 
 
 --
--- assign a value to a cell
--- and eliminates the value from cell peers
+-- assign a value to a cell by sequentially eliminating all other values
 --
 assign :: Values -> (Index, Digit) -> Maybe Values
 assign v (_, '.') = Just v
