@@ -113,18 +113,8 @@ object SudokuSolver {
 
 
   /*
-   * work in progress
+   * that's an ugly version I would like to get rid of
    */
-  def eliminate_(v: Values, c: Cell, d: Digit): Option[Values] = {
-    for {
-      digs <- v.get(c)
-      u <- if (!digs.contains(d))
-             Option(v)
-           else
-             Option(v)
-    } yield u
-  }
-
   def eliminate(v: Values, c: Cell, d: Digit): Option[Values] = {
     // println("eliminating " + d + " from " + c)
     v.get(c).flatMap {
