@@ -33,6 +33,34 @@ object Utils {
   def  all(bs: List[Boolean]): Boolean = bs.foldLeft(true )(_ && _)
 }
 
+
+object Folds {
+  def foldl[A,B](l: List[A]) (z: B) (f: (B, A) => B): B = {
+    def g(x: A, k: B => B)(y: B): B = k(f(y, x))
+    l.foldRight((x: B) => x) (g) (z)
+  }
+
+  def foldr[A,B](l: List[A]) (z: B) (f: (A, B) => B): B = {
+    def g(k: B => B, x: A)(y: B): B = k(f(x, y))
+    l.foldLeft((x: B) => x) (g) (z)
+  }
+
+  def foldlO[A,B](l: List[A]) (z: B)
+                 (f: (B, A) => Option[B]): Option[B] = {
+    def g(x: A, k: B => Option[B])(z: B): Option[B] =
+      f(z, x).flatMap(k(_))
+    l.foldRight((x: B) => Option(x))(g)(z)
+  }
+
+  def foldrO[A,B](l: List[A]) (z: B)
+                 (f: (A, B) => Option[B]): Option[B] = {
+    def g(k: B => Option[B], x: A)(z: B): Option[B] =
+      f(x, z).flatMap(k(_))
+    l.foldLeft((x: B) => Option(x))(g)(z)
+  }
+}
+
+
 object SudokuSolver {
   type Row = Char
   type Col = Char
@@ -172,32 +200,6 @@ object SudokuSolver {
   val hardProblem = "4.....8.5.3..........7......2.....6.....8.4......1.......6.3.7.5..2.....1.4......"
 }
 
-
-object Folds {
-  def foldl[A,B](l: List[A]) (z: B) (f: (B, A) => B): B = {
-    def g(x: A, k: B => B)(y: B): B = k(f(y, x))
-    l.foldRight((x: B) => x) (g) (z)
-  }
-
-  def foldr[A,B](l: List[A]) (z: B) (f: (A, B) => B): B = {
-    def g(k: B => B, x: A)(y: B): B = k(f(x, y))
-    l.foldLeft((x: B) => x) (g) (z)
-  }
-
-  def foldlO[A,B](l: List[A]) (z: B)
-                 (f: (B, A) => Option[B]): Option[B] = {
-    def g(x: A, k: B => Option[B])(z: B): Option[B] =
-      f(z, x).flatMap(k(_))
-    l.foldRight((x: B) => Option(x))(g)(z)
-  }
-
-  def foldrO[A,B](l: List[A]) (z: B)
-                 (f: (A, B) => Option[B]): Option[B] = {
-    def g(k: B => Option[B], x: A)(z: B): Option[B] =
-      f(x, z).flatMap(k(_))
-    l.foldLeft((x: B) => Option(x))(g)(z)
-  }
-}
 
 def goEasy() =
   println(SudokuSolver.valuesToString(SudokuSolver.parse(SudokuSolver.easyProblem)))
