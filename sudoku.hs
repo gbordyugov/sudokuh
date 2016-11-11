@@ -10,6 +10,7 @@
 --
 
 import Control.Monad
+import Control.Monad.Plus
 
 import Data.List
 import Data.Array
@@ -86,6 +87,22 @@ assign v (i, d) =
       l = zip (repeat i) o
   in foldM eliminate v l
 
+
+--
+-- MonadPlus euristics and tests
+--
+eur1 :: Values -> Maybe Values
+eur1 = return
+
+eur2 :: Values -> Maybe Values
+eur2 _ = Nothing
+
+testEur :: Values -> Maybe Values
+testEur v = do
+  u <- eur1 v
+  w <- eur2 u
+  return u
+  -- mplus (return w) (return u)
 
 --
 -- eliminates value d from cell i
