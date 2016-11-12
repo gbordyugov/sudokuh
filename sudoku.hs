@@ -10,7 +10,6 @@
 --
 
 import Control.Monad
-import Control.Monad.Plus
 
 import Data.List
 import Data.Array
@@ -75,6 +74,13 @@ type Values = Array Index [Digit]
 
 iniValues = fillArray $ const digits
 
+--
+-- if f x returns Nothing, continue with x
+--
+noncrit :: (a -> Maybe a) -> (a -> Maybe a)
+noncrit f x = case f x of
+  Nothing -> Just x
+  Just y  -> Just y
 
 --
 -- assign a value to a cell by sequentially eliminating all other values
@@ -87,22 +93,6 @@ assign v (i, d) =
       l = zip (repeat i) o
   in foldM eliminate v l
 
-
---
--- MonadPlus euristics and tests
---
-eur1 :: Values -> Maybe Values
-eur1 = return
-
-eur2 :: Values -> Maybe Values
-eur2 _ = Nothing
-
-testEur :: Values -> Maybe Values
-testEur v = do
-  u <- eur1 v
-  w <- eur2 u
-  return u
-  -- mplus (return w) (return u)
 
 --
 -- eliminates value d from cell i
