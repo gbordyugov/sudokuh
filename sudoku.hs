@@ -77,7 +77,7 @@ iniValues = fillArray $ const digits
 --
 -- if f x returns Nothing, continue with x
 --
-noncrit :: (a -> Maybe a) -> (a -> Maybe a)
+noncrit :: (a -> Maybe a) -> a -> Maybe a
 noncrit f x = case f x of
   Nothing -> Just x
   Just y  -> Just y
