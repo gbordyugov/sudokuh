@@ -94,26 +94,31 @@ assign v (i, d) =
   in foldM eliminate v l
 
 
+dropDigit :: Values -> (Index, Digit) -> Maybe Values
+dropDigit v (i, d) =
+  let ds = delete d (v ! i)
+      u  = v // [(i, ds)]
+  in case ds of
+    [] -> Nothing
+    _  -> Just u
+
 checkForSingleton :: Values -> (Index, Digit) -> Maybe Values
 checkForSingleton v (i, d) =
-  let oldDigits = v ! i
-      newDigits = delete d oldDigits
-      u    = v // [(i, newDigits)]
-  in case newDigits of
+  case (v ! i) of
     []  -> Nothing
-    [c] -> foldM eliminate u (zip (peers ! i) (repeat c))
-    _   -> Just u
+    [c] -> foldM eliminate v (zip (peers ! i) (repeat c))
+    _   -> Just v
 
 eliminate :: Values -> (Index, Digit) -> Maybe Values
 eliminate v (i, d) =
-  let ds = v ! i                -- possible digits before elimination
-  in if d `notElem` ds          -- is already eliminated?
-     then Just v                -- do nothing
-     else do
-      u <- noncrit (\x -> checkForSingleton x (i, d)) v
-      -- w <- noncrit (\x -> checkUnits x (i, d)) u
-      w <- noncrit (\x -> foldM (locate d) x (units ! i)) u
-      return w
+  if d `notElem` (v ! i)     -- is already eliminated?
+  then Just v                -- do nothing
+  else do
+   u <- noncrit (\x -> dropDigit x (i, d))             v
+   w <- noncrit (\x -> checkForSingleton x (i, d))     u
+   -- z <- noncrit (\x -> checkUnits x (i, d))            w
+   z <- noncrit (\x -> foldM (locate d) x (units ! i)) w
+   return z
 
 --
 -- Manu / Daniel Fischer's version of this func
