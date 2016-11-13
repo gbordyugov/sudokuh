@@ -94,22 +94,26 @@ assign v (i, d) =
   in foldM eliminate v l
 
 
---
--- eliminates value d from cell i
---
+checkForSingleton :: Values -> (Index, Digit) -> Maybe Values
+checkForSingleton v (i, d) =
+  let oldDigits = v ! i
+      newDigits = delete d oldDigits
+      u    = v // [(i, newDigits)]
+  in case newDigits of
+    []  -> Nothing
+    [c] -> foldM eliminate u (zip (peers ! i) (repeat c))
+    _   -> Just u
+
 eliminate :: Values -> (Index, Digit) -> Maybe Values
 eliminate v (i, d) =
   let ds = v ! i                -- possible digits before elimination
   in if d `notElem` ds          -- is already eliminated?
      then Just v                -- do nothing
-     else let e = delete d ds   -- remaining digits
-              u = v // [(i, e)]
-          in let w = case e of
-                  []  -> Nothing               -- contradiction
-                  [c] -> foldM eliminate u (zip (peers ! i) (repeat c))
-                  _   -> Just u                -- nothing special
-             -- in w >>= \x -> checkUnits x (i, d)
-             in w >>= \x -> foldM (locate d) x (units ! i)
+     else do
+      u <- noncrit (\x -> checkForSingleton x (i, d)) v
+      -- w <- noncrit (\x -> checkUnits x (i, d)) u
+      w <- noncrit (\x -> foldM (locate d) x (units ! i)) u
+      return w
 
 --
 -- Manu / Daniel Fischer's version of this func
@@ -220,5 +224,8 @@ doFile fname = do
 
 main = doFile "top95.txt"
 
-easy = "..3.2.6..9..3.5..1..18.64....81.29..7.......8..67.82....26.95..8..2.3..9..5.1.3.."
-hard = "4.....8.5.3..........7......2.....6.....8.4......1.......6.3.7.5..2.....1.4......"
+easyProblem = "..3.2.6..9..3.5..1..18.64....81.29..7.......8..67.82....26.95..8..2.3..9..5.1.3.."
+hardProblem = "4.....8.5.3..........7......2.....6.....8.4......1.......6.3.7.5..2.....1.4......"
+
+goEasy = displayMValues $ solve easyProblem
+goHard = displayMValues $ solve hardProblem
