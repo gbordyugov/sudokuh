@@ -82,18 +82,27 @@ noncrit f x = case f x of
   Nothing -> Just x
   Just y  -> Just y
 
+
 --
--- assign a value to a cell by sequentially eliminating all other values
+-- remove digit d from peers of i
+--
+removeFromPeers :: Values -> (Index, Digit) -> Maybe Values
+removeFromPeers v (i, d) =
+  foldM eliminate v $ zip (peers ! i) (repeat d)
+
+
+--
+-- assign a value to a cell and remove it from peers
 --
 assign :: Values -> (Index, Digit) -> Maybe Values
 assign u (_, '.') = Just u
 assign u (_, '0') = Just u
-assign u (i, d) =
-  let v = u // [(i, [d])]
-      l = zip (peers ! i) (repeat d)
-  in foldM eliminate v l
+assign u (i, d) = removeFromPeers (u // [(i, [d])]) (i, d)
 
 
+--
+-- drops digit from cell
+--
 dropDigit :: Values -> (Index, Digit) -> Maybe Values
 dropDigit v (i, d) =
   let ds = delete d (v ! i)
@@ -102,13 +111,22 @@ dropDigit v (i, d) =
     [] -> Nothing
     _  -> Just u
 
+--
+-- checks if just one digit left, if so, eliminates it from peers
+--
 checkForSingleton :: Values -> (Index, Digit) -> Maybe Values
 checkForSingleton v (i, d) =
   case (v ! i) of
     []  -> Nothing
-    [c] -> foldM eliminate v (zip (peers ! i) (repeat c))
+    [c] -> removeFromPeers v (i, d)
     _   -> Just v
 
+--
+-- eliminates digit d from i and check two heuristics
+-- 1) is just one possible value left? if yes, assign it
+-- 2) does d occur just in one place among three units of d?
+--    if yes, put it there
+--
 eliminate :: Values -> (Index, Digit) -> Maybe Values
 eliminate u (i, d) =
   if d `notElem` (u ! i)     -- is already eliminated?
