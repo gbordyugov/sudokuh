@@ -110,14 +110,14 @@ checkForSingleton v (i, d) =
     _   -> Just v
 
 eliminate :: Values -> (Index, Digit) -> Maybe Values
-eliminate v (i, d) =
-  if d `notElem` (v ! i)     -- is already eliminated?
-  then Just v                -- do nothing
+eliminate u (i, d) =
+  if d `notElem` (u ! i)     -- is already eliminated?
+  then Just u                -- do nothing
   else do
-   u <- noncrit (\x -> dropDigit x (i, d))             v
-   w <- noncrit (\x -> checkForSingleton x (i, d))     u
-   -- z <- noncrit (\x -> checkUnits x (i, d))            w
-   z <- noncrit (\x -> foldM (locate d) x (units ! i)) w
+   v <- dropDigit u (i, d)
+   w <- noncrit ((flip checkForSingleton) (i, d)) v
+   z <- noncrit ((flip checkUnits) (i, d))        w
+   -- z <- noncrit (\x -> foldM (locate d) x (units ! i)) w
    return z
 
 --
