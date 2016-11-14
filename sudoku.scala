@@ -11,7 +11,7 @@
  */
 
 object Utils {
-  def cross[A, B](as: List[A], bs: List[B]): List[(A, B)] = 
+  def cross[A, B](as: List[A], bs: List[B]): List[(A, B)] =
     for(a <- as; b <- bs) yield((a, b))
 
   def center(s: String, p: Int): String = {
@@ -125,18 +125,29 @@ object SudokuSolver {
   }
 
 
-  def assign(v: Values, c: Cell, d: Digit): Option[Values] = 
+  def removeFromPeers(v: Values, c: Cell, d: Digit): Option[Values] =
+    Folds.foldlO(peers(c).toList.zip(List.fill(20)(d)))(v)
+      { (v, p) => eliminate(v, p._1, p._2) }
+
+  def dropDigit(v: Values, c: Cell, d: Digit): Option[Values] = {
+    val others = v(c).filterNot{ _ == d }
+    others match {
+      case "" => None
+      case _ => Option(v - c + (c -> others.toString))
+    }
+  }
+
+  def assign(v: Values, c: Cell, d: Digit): Option[Values] =
     if (!digits.contains(d))
       Option(v)
-    else {
-      // println("assigning " + d + " to " + c)
-      for {
-        digits <- v.get(c)
-        others =  digits.filterNot(_==d)
-        indxes =  List.fill(others.length)(c)
-        u <- Folds.foldlO(indxes.zip(others))(v)
-          { (v, p) => eliminate(v, p._1, p._2) }
-      } yield u
+    else
+      removeFromPeers(v - c + (c -> d.toString), c, d)
+
+  def checkForSingleton(v: Values, c: Cell, d: Digit): Option[Values] =
+    v(c).toList match {
+      case Nil    => None
+      case x::Nil => removeFromPeers(v, c, x)
+      case _      => Option(v)
     }
 
 
@@ -169,7 +180,6 @@ object SudokuSolver {
       }
     }
   }
- 
 
 
 
