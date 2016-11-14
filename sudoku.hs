@@ -86,11 +86,11 @@ noncrit f x = case f x of
 -- assign a value to a cell by sequentially eliminating all other values
 --
 assign :: Values -> (Index, Digit) -> Maybe Values
-assign v (_, '.') = Just v
-assign v (_, '0') = Just v
-assign v (i, d) =
-  let o = delete d $ v ! i
-      l = zip (repeat i) o
+assign u (_, '.') = Just u
+assign u (_, '0') = Just u
+assign u (i, d) =
+  let v = u // [(i, [d])]
+      l = zip (peers ! i) (repeat d)
   in foldM eliminate v l
 
 
