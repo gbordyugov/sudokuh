@@ -176,11 +176,7 @@ search (Just v) =
      then Just v
      else let (n, s) = minimum [(length (v!s), s) | s <- squares
                                                   , length (v!s) > 1]
-          in some [search (assign v (s, d)) | d <- v!s]
-  where
-    some []            = Nothing
-    some (Just x : xs) = Just x
-    some (_:xs)        = some xs
+          in msum [search (assign v (s, d)) | d <- v!s]
 
 --
 --
