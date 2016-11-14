@@ -75,20 +75,14 @@ type Values = Array Index [Digit]
 iniValues = fillArray $ const digits
 
 --
+-- helper function, makes an a -> Maybe a function noncritical
+-- in a do-block
 -- if f x returns Nothing, continue with x
 --
 noncrit :: (a -> Maybe a) -> a -> Maybe a
 noncrit f x = case f x of
   Nothing -> Just x
   Just y  -> Just y
-
-
---
--- remove digit d from peers of i
---
-removeFromPeers :: Values -> (Index, Digit) -> Maybe Values
-removeFromPeers v (i, d) =
-  foldM eliminate v $ zip (peers ! i) (repeat d)
 
 
 --
@@ -106,10 +100,9 @@ assign u (i, d) = removeFromPeers (u // [(i, [d])]) (i, d)
 dropDigit :: Values -> (Index, Digit) -> Maybe Values
 dropDigit v (i, d) =
   let ds = delete d (v ! i)
-      u  = v // [(i, ds)]
   in case ds of
     [] -> Nothing
-    _  -> Just u
+    _  -> Just $ v // [(i, ds)]
 
 --
 -- checks if just one digit left, if so, eliminates it from peers
@@ -120,6 +113,14 @@ checkForSingleton v (i, d) =
     []  -> Nothing
     [c] -> removeFromPeers v (i, d)
     _   -> Just v
+
+--
+-- remove digit d from peers of i
+--
+removeFromPeers :: Values -> (Index, Digit) -> Maybe Values
+removeFromPeers v (i, d) =
+  foldM eliminate v $ zip (peers ! i) (repeat d)
+
 
 --
 -- eliminates digit d from i and check two heuristics
