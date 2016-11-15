@@ -184,7 +184,7 @@ object SudokuSolver {
   def checkUnits(v: Values, c: Cell, d: Digit): Option[Values] = {
     val jss = units(c).map(u => u.filter(c => v(c).contains(d)))
     Folds.foldlO(jss)(v) {
-      (v: Values, l: List[Cell]) => l match {
+      (v, l) => l match {
         case Nil    => None
         case x::Nil => assign(v, x, d)
         case _      => Option(v)
