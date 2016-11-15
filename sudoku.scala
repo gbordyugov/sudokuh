@@ -30,12 +30,20 @@ object Utils {
     case _   => xs.take(n) :: groupsOf(xs.drop(n), n)
   }
 
-  def  all(bs: List[Boolean]): Boolean = bs.foldLeft(true )(_ && _)
+
+  def all(bs: List[Boolean]): Boolean = bs.foldLeft(true )(_ && _)
+
 
   def msum[A](l: List[Option[A]]): Option[A] = l match {
     case Nil           => None
     case Some(x)::tail => Some(x)
     case None::tail    => msum(tail)
+  }
+
+
+  def noncrit[A](f: A => Option[A], a: A): Option[A] = f(a) match {
+    case None    => Option(a)
+    case Some(y) => Option(y)
   }
 }
 
@@ -156,15 +164,8 @@ object SudokuSolver {
 
 
   def removeFromPeers(v: Values, c: Cell, d: Digit): Option[Values] = {
-    Folds.foldlO(peers(c).toList.zip(List.fill(20)(d)))(v) {
-      (v, p) => eliminate(v, p._1, p._2)
-    }
-  }
-
-
-  def noncrit[A](f: A => Option[A], a: A): Option[A] = f(a) match {
-    case None    => Option(a)
-    case Some(y) => Option(y)
+    Folds.foldlO(peers(c).toList.zip(List.fill(20)(d)))(v)
+      { (v, p) => eliminate(v, p._1, p._2) }
   }
 
 
@@ -174,8 +175,8 @@ object SudokuSolver {
     else
       for {
         v <- dropDigit(u, c, d)
-        w <- noncrit((x: Values) => checkForSingleton(x, c, d), v)
-        z <- noncrit((x: Values) =>        checkUnits(x, c, d), w)
+        w <- Utils.noncrit((x: Values) => checkForSingleton(x, c, d), v)
+        z <- Utils.noncrit((x: Values) =>        checkUnits(x, c, d), w)
       } yield(z)
   }
 
@@ -184,9 +185,9 @@ object SudokuSolver {
     val jss = units(c).map(u => u.filter(c => v(c).contains(d)))
     Folds.foldlO(jss)(v) {
       (v: Values, l: List[Cell]) => l match {
-        case Nil            => None
-        case (x: Cell)::Nil => assign(v, x, d)
-        case _              => Option(v)
+        case Nil    => None
+        case x::Nil => assign(v, x, d)
+        case _      => Option(v)
       }
     }
   }
@@ -207,6 +208,7 @@ object SudokuSolver {
       }
     }
   }
+
 
   def valuesToString(v: Option[Values]): String = v match {
     case None => new String("no solution")
@@ -245,6 +247,7 @@ def goEasy() =
 def goHard() =
   println(SudokuSolver.valuesToString(
     SudokuSolver.parse(SudokuSolver.hardProblem)))
+
 
 def solveEasy() =
   println(SudokuSolver.valuesToString(
