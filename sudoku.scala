@@ -31,6 +31,12 @@ object Utils {
   }
 
   def  all(bs: List[Boolean]): Boolean = bs.foldLeft(true )(_ && _)
+
+  def msum[A](l: List[Option[A]]): Option[A] = l match {
+    case Nil           => None
+    case Some(x)::tail => Some(x)
+    case None::tail    => msum(tail)
+  }
 }
 
 
@@ -125,9 +131,12 @@ object SudokuSolver {
   }
 
 
-  def removeFromPeers(v: Values, c: Cell, d: Digit): Option[Values] =
-    Folds.foldlO(peers(c).toList.zip(List.fill(20)(d)))(v)
-      { (v, p) => eliminate(v, p._1, p._2) }
+  def assign(v: Values, c: Cell, d: Digit): Option[Values] =
+    if (!digits.contains(d))
+      Option(v)
+    else
+      removeFromPeers(v - c + (c -> d.toString), c, d)
+
 
   def dropDigit(v: Values, c: Cell, d: Digit): Option[Values] = {
     val others = v(c).filterNot{ _ == d }
@@ -137,11 +146,6 @@ object SudokuSolver {
     }
   }
 
-  def assign(v: Values, c: Cell, d: Digit): Option[Values] =
-    if (!digits.contains(d))
-      Option(v)
-    else
-      removeFromPeers(v - c + (c -> d.toString), c, d)
 
   def checkForSingleton(v: Values, c: Cell, d: Digit): Option[Values] =
     v(c).toList match {
@@ -151,37 +155,58 @@ object SudokuSolver {
     }
 
 
-  /*
-   * that's an ugly version I would like to get rid of
-   */
-  def eliminate(v: Values, c: Cell, d: Digit): Option[Values] = {
-    // println("eliminating " + d + " from " + c)
-    v.get(c).flatMap {
-      digs => {
-        if (!digs.contains(d))
-          Option(v)
-        else {
-          val e = digs.filterNot(_==d)
-          val u = v - c + (c -> e)
-          e.toList match {
-            case Nil       => None // eliminated too much
-            case x::Nil    => peers.get(c).flatMap {
-              pes => {
-                val ps = pes.toList
-                val ds = List.fill(ps.length)(x)
-                Folds.foldlO(ps.zip(ds))(u) {
-                  (v, p) => eliminate(v, p._1, p._2)
-                }
-              }
-            }
-            case otherwise => Option(u)
-          }
-        }
-      }
+  def removeFromPeers(v: Values, c: Cell, d: Digit): Option[Values] = {
+    Folds.foldlO(peers(c).toList.zip(List.fill(20)(d)))(v) {
+      (v, p) => eliminate(v, p._1, p._2)
     }
   }
 
 
+  def noncrit[A](f: A => Option[A], a: A): Option[A] = f(a) match {
+    case None    => Option(a)
+    case Some(y) => Option(y)
+  }
+
+
+  def eliminate(u: Values, c: Cell, d: Digit): Option[Values] = {
+    if (!u(c).contains(d))
+      Option(u)
+    else
+      for {
+        v <- dropDigit(u, c, d)
+        w <- noncrit((x: Values) => checkForSingleton(x, c, d), v)
+        z <- noncrit((x: Values) =>        checkUnits(x, c, d), w)
+      } yield(z)
+  }
+
+
+  def checkUnits(v: Values, c: Cell, d: Digit): Option[Values] = {
+    val jss = units(c).map(u => u.filter(c => v(c).contains(d)))
+    Folds.foldlO(jss)(v) {
+      (v: Values, l: List[Cell]) => l match {
+        case Nil            => None
+        case (x: Cell)::Nil => assign(v, x, d)
+        case _              => Option(v)
+      }
+    }
+  }
+
+  def search(v: Option[Values]): Option[Values] = v match {
+    case None    => None
+    case Some(v) => {
+      val lens = squares.map(s => v(s).length)
+      val notdone = lens.filter{_ > 1}
+      if (notdone == Nil)
+        Option(v)
+      else {
+        val (l, s) = (for {
+          s <- squares
+          if (v(s).length > 1)
+        } yield((v(s).length,s))).min
+        Utils.msum(digits.toList.map(d => search(assign(v, s, d))))
+      }
+    }
+  }
 
   def valuesToString(v: Option[Values]): String = v match {
     case None => new String("no solution")
@@ -206,12 +231,25 @@ object SudokuSolver {
     }
   }
 
+
   val easyProblem = "..3.2.6..9..3.5..1..18.64....81.29..7.......8..67.82....26.95..8..2.3..9..5.1.3.."
+
   val hardProblem = "4.....8.5.3..........7......2.....6.....8.4......1.......6.3.7.5..2.....1.4......"
 }
 
 
 def goEasy() =
-  println(SudokuSolver.valuesToString(SudokuSolver.parse(SudokuSolver.easyProblem)))
+  println(SudokuSolver.valuesToString(
+    SudokuSolver.parse(SudokuSolver.easyProblem)))
+
 def goHard() =
-  println(SudokuSolver.valuesToString(SudokuSolver.parse(SudokuSolver.hardProblem)))
+  println(SudokuSolver.valuesToString(
+    SudokuSolver.parse(SudokuSolver.hardProblem)))
+
+def solveEasy() =
+  println(SudokuSolver.valuesToString(
+    SudokuSolver.search(SudokuSolver.parse(SudokuSolver.easyProblem))))
+
+def solveHard() =
+  println(SudokuSolver.valuesToString(
+    SudokuSolver.search(SudokuSolver.parse(SudokuSolver.hardProblem))))
