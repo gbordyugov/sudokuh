@@ -180,13 +180,11 @@ object SudokuSolver {
   def search(v: Option[Values]): Option[Values] = v match {
     case None    => None
     case Some(v) => {
-      if(squares.map(v(_).length).filter{_ > 1}.isEmpty)
+      val ls = squares.filter(v(_).length > 1).map(s=>((v(s).length,s)))
+      if (ls.isEmpty)
         Option(v)
       else {
-        val (l, s) = (for {
-          s <- squares
-          if (v(s).length > 1)
-        } yield((v(s).length,s))).min
+        val (l, s) = ls.min
         Utils.msum(digits.toList.map(d => search(assign(v, s, d))))
       }
     }
