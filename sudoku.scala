@@ -6,13 +6,14 @@
 
 /*
  * TODO:
- *  - eliminate
- *  - search
+ * - more elengat search()
  */
 
 object Utils {
+
   def cross[A, B](as: List[A], bs: List[B]): List[(A, B)] =
     for(a <- as; b <- bs) yield((a, b))
+
 
   def center(s: String, p: Int): String = {
     val l = s.length
@@ -24,6 +25,7 @@ object Utils {
       " "*pref + s + " "*suff
     }
   }
+
 
   def groupsOf[T](xs: List[T], n: Int) : List[List[T]] = xs match {
     case Nil => Nil
@@ -49,15 +51,18 @@ object Utils {
 
 
 object Folds {
+
   def foldl[A,B](l: List[A]) (z: B) (f: (B, A) => B): B = {
     def g(x: A, k: B => B)(y: B): B = k(f(y, x))
     l.foldRight((x: B) => x) (g) (z)
   }
 
+
   def foldr[A,B](l: List[A]) (z: B) (f: (A, B) => B): B = {
     def g(k: B => B, x: A)(y: B): B = k(f(x, y))
     l.foldLeft((x: B) => x) (g) (z)
   }
+
 
   def foldlO[A,B](l: List[A]) (z: B)
                  (f: (B, A) => Option[B]): Option[B] = {
@@ -66,12 +71,14 @@ object Folds {
     l.foldRight((x: B) => Option(x))(g)(z)
   }
 
+
   def foldrO[A,B](l: List[A]) (z: B)
                  (f: (A, B) => Option[B]): Option[B] = {
     def g(k: B => Option[B], x: A)(z: B): Option[B] =
       f(x, z).flatMap(k(_))
     l.foldLeft((x: B) => Option(x))(g)(z)
   }
+
 }
 
 
@@ -126,7 +133,6 @@ object SudokuSolver {
 
 
   type PossibleDigits = String
-
   type Values = Map[Cell, PossibleDigits]
 
 
@@ -192,12 +198,11 @@ object SudokuSolver {
     }
   }
 
+
   def search(v: Option[Values]): Option[Values] = v match {
     case None    => None
     case Some(v) => {
-      val lens = squares.map(s => v(s).length)
-      val notdone = lens.filter{_ > 1}
-      if (notdone == Nil)
+      if(squares.map(v(_).length).filter{_ > 1}.isEmpty)
         Option(v)
       else {
         val (l, s) = (for {
