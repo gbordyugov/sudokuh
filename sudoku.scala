@@ -117,10 +117,9 @@ object SudokuSolver {
   val iniValues: Values = squares.map(s => (s -> digits)).toMap
 
 
-  def parse(s: String): Option[Values] = {
+  def parse(s: String): Option[Values] =
     Folds.foldlO(squares.zip(s))(iniValues)
       { (v, p) => assign(v, p._1, p._2) }
-  }
 
 
   def assign(v: Values, c: Cell, d: Digit): Option[Values] =
@@ -134,23 +133,22 @@ object SudokuSolver {
     val others = v(c).filterNot{ _ == d }
     others match {
       case "" => None
-      case _ => Option(v - c + (c -> others.toString))
+      case _  => Option(v - c + (c -> others))
     }
   }
 
 
   def checkForSingleton(v: Values, c: Cell, d: Digit): Option[Values] =
-    v(c).toList match {
-      case Nil    => None
-      case x::Nil => removeFromPeers(v, c, x)
-      case _      => Option(v)
+    v(c).length match {
+      case 0 => None
+      case 1 => removeFromPeers(v, c, v(c).head)
+      case _ => Option(v)
     }
 
 
-  def removeFromPeers(v: Values, c: Cell, d: Digit): Option[Values] = {
+  def removeFromPeers(v: Values, c: Cell, d: Digit): Option[Values] =
     Folds.foldlO(peers(c).toList.zip(List.fill(20)(d)))(v)
       { (v, p) => eliminate(v, p._1, p._2) }
-  }
 
 
   def eliminate(u: Values, c: Cell, d: Digit): Option[Values] = {
@@ -218,22 +216,14 @@ object SudokuSolver {
   val easyProblem = "..3.2.6..9..3.5..1..18.64....81.29..7.......8..67.82....26.95..8..2.3..9..5.1.3.."
 
   val hardProblem = "4.....8.5.3..........7......2.....6.....8.4......1.......6.3.7.5..2.....1.4......"
+
+
+  def goEasy() = println(valuesToString(parse(easyProblem)))
+  def goHard() = println(valuesToString(parse(hardProblem)))
+
+
+  def solveEasy() = println(valuesToString(search(parse(easyProblem))))
+  def solveHard() = println(valuesToString( search(parse(hardProblem))))
+
+  def main(args: Array[String]): Unit = solveHard()
 }
-
-
-def goEasy() =
-  println(SudokuSolver.valuesToString(
-    SudokuSolver.parse(SudokuSolver.easyProblem)))
-
-def goHard() =
-  println(SudokuSolver.valuesToString(
-    SudokuSolver.parse(SudokuSolver.hardProblem)))
-
-
-def solveEasy() =
-  println(SudokuSolver.valuesToString(
-    SudokuSolver.search(SudokuSolver.parse(SudokuSolver.easyProblem))))
-
-def solveHard() =
-  println(SudokuSolver.valuesToString(
-    SudokuSolver.search(SudokuSolver.parse(SudokuSolver.hardProblem))))
