@@ -123,18 +123,14 @@ object SudokuSolver {
 
 
   def assign(v: Values, c: Cell, d: Digit): Option[Values] =
-    if (!digits.contains(d))
-      Option(v)
-    else
-      removeFromPeers(v - c + (c -> d.toString), c, d)
+    if (!digits.contains(d)) Option(v)
+    else removeFromPeers(v - c + (c -> d.toString), c, d)
 
 
   def dropDigit(v: Values, c: Cell, d: Digit): Option[Values] = {
     val others = v(c).filterNot{ _ == d }
-    others match {
-      case "" => None
-      case _  => Option(v - c + (c -> others))
-    }
+    if (others.length == 0) None
+    else Option(v - c + (c -> others))
   }
 
 
@@ -152,14 +148,12 @@ object SudokuSolver {
 
 
   def eliminate(u: Values, c: Cell, d: Digit): Option[Values] = {
-    if (!u(c).contains(d))
-      Option(u)
-    else
-      for {
-        v <- dropDigit(u, c, d)
-        w <- Utils.noncrit((x: Values) => checkForSingleton(x, c, d), v)
-        z <- Utils.noncrit((x: Values) =>        checkUnits(x, c, d), w)
-      } yield(z)
+    if (!u(c).contains(d)) Option(u)
+    else for {
+      v <- dropDigit(u, c, d)
+      w <- Utils.noncrit((x: Values) => checkForSingleton(x, c, d), v)
+      z <- Utils.noncrit((x: Values) =>        checkUnits(x, c, d), w)
+    } yield(z)
   }
 
 
