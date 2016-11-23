@@ -44,8 +44,8 @@ object Utils {
 
 
   def noncrit[A](f: A => Option[A], a: A): Option[A] = f(a) match {
-    case None    => Option(a)
-    case Some(y) => Option(y)
+    case None    => Some(a)
+    case Some(y) => Some(y)
   }
 }
 
@@ -123,14 +123,14 @@ object SudokuSolver {
 
 
   def assign(v: Values, c: Cell, d: Digit): Option[Values] =
-    if (!digits.contains(d)) Option(v)
+    if (!digits.contains(d)) Some(v)
     else removeFromPeers(v - c + (c -> d.toString), c, d)
 
 
   def dropDigit(v: Values, c: Cell, d: Digit): Option[Values] = {
     val others = v(c).filterNot{ _ == d }
     if (others.length == 0) None
-    else Option(v - c + (c -> others))
+    else Some(v - c + (c -> others))
   }
 
 
@@ -138,7 +138,7 @@ object SudokuSolver {
     v(c).length match {
       case 0 => None
       case 1 => removeFromPeers(v, c, v(c).head)
-      case _ => Option(v)
+      case _ => Some(v)
     }
 
 
@@ -148,7 +148,7 @@ object SudokuSolver {
 
 
   def eliminate(u: Values, c: Cell, d: Digit): Option[Values] = {
-    if (!u(c).contains(d)) Option(u)
+    if (!u(c).contains(d)) Some(u)
     else for {
       v <- dropDigit(u, c, d)
       w <- Utils.noncrit((x: Values) => checkForSingleton(x, c, d), v)
@@ -163,7 +163,7 @@ object SudokuSolver {
       (v, l) => l match {
         case Nil    => None
         case x::Nil => assign(v, x, d)
-        case _      => Option(v)
+        case _      => Some(v)
       }
     }
   }
@@ -174,7 +174,7 @@ object SudokuSolver {
     case Some(v) => {
       val ls = squares.filter(v(_).length > 1).map(s=>((v(s).length,s)))
       if (ls.isEmpty)
-        Option(v)
+        Some(v)
       else {
         val (l, s) = ls.min
         Utils.msum(digits.toList.map(d => search(assign(v, s, d))))
